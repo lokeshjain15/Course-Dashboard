@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Course Dashboard</title>
+
+  <!-- DaisyUI + Tailwind -->
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          backgroundImage: {
+            'body-radial': 'radial-gradient(circle at top left, #e0e7ff, #f0f4ff, #dfe9f3)',
+            'header-gradient': 'linear-gradient(90deg, #4f46e5, #6366f1, #818cf8)',
+            'sidebar-gradient': 'linear-gradient(180deg, #eef2ff, #c7d2fe)',
+            'table-head-gradient': 'linear-gradient(90deg, #6366f1, #8b5cf6)'
+          },
+          boxShadow: {
+            'header': '0 4px 20px rgba(79, 70, 229, 0.3)',
+            'section': '0 4px 20px rgba(99, 102, 241, 0.15)',
+            'logo-inner': 'inset 0 2px 4px rgba(0,0,0,0.08)',
+            'modal': '0 4px 20px rgba(99, 102, 241, 0.2)'
+          },
+          borderColor: {
+            'section': 'rgba(99,102,241,0.15)'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+</head>
+
+<body class="font-sans min-h-screen bg-body-radial">
+
+  <!-- ============ AUTH SCREEN (FIRST SCREEN) ============ -->
+  <div id="authScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-md bg-white/90 backdrop-blur-md rounded-2xl shadow-section border border-section p-6">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <div
+          class="w-10 h-10 flex items-center justify-center font-bold rounded-lg shadow-logo-inner bg-indigo-600 text-white border-2 border-indigo-600">
+          LJ
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold tracking-wide text-indigo-700">
+            Course Management Dashboard
+          </h1>
+          <p class="text-sm text-gray-500">Please login or sign up to continue</p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div role="tablist" class="tabs tabs-boxed mb-4">
+        <button id="tabLogin" role="tab" class="tab tab-active flex-1 text-sm font-medium">
+          Login
+        </button>
+        <button id="tabSignup" role="tab" class="tab flex-1 text-sm font-medium">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="authLoginForm" class="space-y-3" autocomplete="off">
+        <input id="authLoginUsername" type="text" placeholder="Username"
+          class="input input-bordered w-full" required />
+        <input id="authLoginPassword" type="password" placeholder="Password"
+          class="input input-bordered w-full" required />
+        <p id="authLoginError" class="text-sm text-red-600 hidden"></p>
+
+        <button type="submit"
+          class="btn bg-indigo-600 text-white hover:bg-indigo-700 w-full border-none">
+          Login
+        </button>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="authSignupForm" class="space-y-3 hidden" autocomplete="off">
+        <input id="authSignupName" type="text" placeholder="Full Name"
+          class="input input-bordered w-full" required />
+        <input id="authSignupEmail" type="email" placeholder="Email"
+          class="input input-bordered w-full" required />
+        <input id="authSignupPassword" type="password" placeholder="Password"
+          class="input input-bordered w-full" required />
+        <p id="authSignupError" class="text-sm text-red-600 hidden"></p>
+
+        <button type="submit"
+          class="btn bg-indigo-600 text-white hover:bg-indigo-700 w-full border-none">
+          Register & Continue
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ DASHBOARD (HIDE UNTIL LOGIN) ============ -->
+  <div id="dashboard" class="hidden">
+
+    <!-- ===== Header ===== -->
+    <header
+      class="flex flex-wrap items-center justify-between p-4 rounded-b-2xl bg-header-gradient text-white shadow-header">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 flex items-center justify-center font-bold rounded-lg shadow-logo-inner bg-white text-indigo-700 border-2 border-indigo-600">
+          LJ
+        </div>
+        <div>
+          <h1 class="text-xl font-semibold tracking-wide">Course Management Dashboard</h1>
+          <p class="text-sm text-indigo-100">
+            Track assignments • Manage students • Update settings easily
+          </p>
+        </div>
+      </div>
+
+      <nav class="flex gap-3 mt-3 md:mt-0 items-center">
+        <button id="loginBtn"
+          class="px-4 py-2 border rounded-lg bg-white text-indigo-700 font-medium hover:bg-indigo-100 hover:text-indigo-900 transition-all">
+          Login
+        </button>
+        <button id="signupBtn"
+          class="px-4 py-2 rounded-lg font-medium bg-white text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 transition-all">
+          Sign Up
+        </button>
+        <button id="logoutBtn"
+          class="px-4 py-2 rounded-lg font-medium bg-red-500 text-white hover:bg-red-600 transition-all">
+          Logout
+        </button>
+        <button id="menu-btn"
+          class="md:hidden px-3 py-2 border rounded-lg bg-white text-indigo-700 font-semibold hover:bg-indigo-100 hover:text-indigo-900 transition-all">
+          ☰
+        </button>
+      </nav>
+    </header>
+
+    <!-- ===== Dashboard Layout ===== -->
+    <div class="flex min-h-screen relative">
+
+      <!-- Sidebar -->
+      <aside id="sidebar"
+        class="fixed md:static w-64 shadow-lg -translate-x-full md:translate-x-0 rounded-r-2xl bg-sidebar-gradient text-indigo-900 z-20 transition-transform duration-300">
+        <div class="p-4 font-bold text-lg bg-indigo-600 text-white rounded-t-2xl text-center">
+          Menu
+        </div>
+        <ul class="p-4 space-y-2">
+          <li>
+            <a href="#HOME"
+              class="block py-2 px-3 rounded-lg font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-colors">
+              Home
+            </a>
+          </li>
+          <li>
+            <a href="#assignments"
+              class="block py-2 px-3 rounded-lg font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-colors">
+              Assignments
+            </a>
+          </li>
+          <li>
+            <a href="#students"
+              class="block py-2 px-3 rounded-lg font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-colors">
+              Students
+            </a>
+          </li>
+          <li>
+            <a href="#settings"
+              class="block py-2 px-3 rounded-lg font-medium hover:bg-indigo-100 hover:text-indigo-700 transition-colors">
+              Settings
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content (centered width) -->
+      <main class="flex-1 md:mr-45  p-6 space-y-10 mr-0 md:mr-10 max-w-5xl mx-auto">
+
+        <!-- HOME Section -->
+        <section id="HOME"
+          class="p-6 text-center bg-white/90 backdrop-blur-md border border-section shadow-section rounded-2xl">
+          <h2 class="text-2xl mb-4 text-indigo-700 font-semibold tracking-wide drop-shadow-sm">
+            HOME PAGE
+          </h2>
+          <p class="max-w-3xl mx-auto text-gray-700 text-base leading-7">
+            Welcome to your <b>Course Management Dashboard!</b> Here you can track all your
+            <b>assignments</b>,
+            monitor <b>student progress</b>, and update your <b>course preferences</b> easily in one place.
+            This dashboard helps you manage your academic workflow efficiently by giving a clear view of what’s
+            completed, what’s pending, and what needs your attention next.
+            <br><br>
+            It is designed using <b>Tailwind CSS</b> and <b>DaisyUI</b> to provide a clean, responsive, and
+            mobile-friendly interface.
+            You can navigate to any section directly from the sidebar. Each section scrolls smoothly and adjusts to
+            various screen sizes.
+            <br><br>
+            This project is a great example of how <b>modern web technologies</b> like Tailwind and Handlebars.js
+            can be used together to build elegant, efficient, and maintainable web applications with minimal effort.
+          </p>
+        </section>
+
+        <!-- Assignments Section -->
+        <section id="assignments"
+          class="p-6 text-center bg-white/90 backdrop-blur-md border border-section shadow-section rounded-2xl">
+          <h2 class="text-2xl mb-4 text-indigo-700 font-semibold tracking-wide drop-shadow-sm">
+            Assignments
+          </h2>
+          <p class="text-gray-700 max-w-xl mx-auto">
+            This section displays all assignments, their due dates, and completion status.
+          </p>
+
+          <div class="overflow-x-auto mt-4">
+            <table class="table w-full border border-gray-200 rounded-xl overflow-hidden">
+              <thead class="bg-table-head-gradient text-white">
+                <tr>
+                  <th class="text-center py-3">Title</th>
+                  <th class="text-center py-3">Due Date</th>
+                  <th class="text-center py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">HTML Basics</td>
+                  <td class="text-center py-3">15 Nov 2025</td>
+                  <td class="text-center py-3">✅ Submitted</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">JAVA</td>
+                  <td class="text-center py-3">13 Nov 2025</td>
+                  <td class="text-center py-3">✅ Submitted</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">C++</td>
+                  <td class="text-center py-3">10 Nov 2025</td>
+                  <td class="text-center py-3">🕒 Pending</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">PYTHON</td>
+                  <td class="text-center py-3">09 Nov 2025</td>
+                  <td class="text-center py-3">✅ Submitted</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">PHP</td>
+                  <td class="text-center py-3">15 Nov 2025</td>
+                  <td class="text-center py-3">❌ Not Submitted</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">CSS Layout</td>
+                  <td class="text-center py-3">20 Nov 2025</td>
+                  <td class="text-center py-3">🕒 Pending</td>
+                </tr>
+                <tr class="bg-gray-50 hover:bg-indigo-50 transition-colors">
+                  <td class="text-center py-3">JavaScript Functions</td>
+                  <td class="text-center py-3">25 Nov 2025</td>
+                  <td class="text-center py-3">❌ Not Submitted</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Students Section -->
+        <section id="students"
+          class="p-6 text-center bg-white/90 backdrop-blur-md border border-section shadow-section rounded-2xl">
+          <h2 class="text-2xl mb-4 text-indigo-700 font-semibold tracking-wide drop-shadow-sm">
+            Students
+          </h2>
+          <p class="text-gray-700">
+            List of students currently enrolled in your course.
+          </p>
+
+          <ul class="divide-y divide-gray-200 max-w-md mx-auto mt-4 text-left">
+            <li class="py-2 flex justify-between">
+              <span>Lokesh Jain</span>
+              <span class="text-green-600 font-medium">Active</span>
+            </li>
+            <li class="py-2 flex justify-between">
+              <span>Sagar Vora</span>
+              <span class="text-green-600 font-medium">Active</span>
+            </li>
+            <li class="py-2 flex justify-between">
+              <span>Sandhya Sengani</span>
+              <span class="text-green-600 font-medium">Active</span>
+            </li>
+            <li class="py-2 flex justify-between">
+              <span>Khushal Jain</span>
+              <span class="text-green-600 font-medium">Active</span>
+            </li>
+            <li class="py-2 flex justify-between">
+              <span>Mahek Adani</span>
+              <span class="text-yellow-600 font-medium">Inactive</span>
+            </li>
+            <li class="py-2 flex justify-between">
+              <span>Isha Jain</span>
+              <span class="text-yellow-600 font-medium">Inactive</span>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings"
+          class="p-6 mb-10 text-center bg-white/90 backdrop-blur-md border border-section shadow-section rounded-2xl">
+          <h2 class="text-2xl mb-4 text-indigo-700 font-semibold tracking-wide drop-shadow-sm">
+            Settings
+          </h2>
+          <p class="text-gray-700 mb-4 leading-relaxed max-w-xl mx-auto">
+            Update your account preferences. Choose notification preference and theme, then click
+            <strong>Save Settings</strong>.
+          </p>
+
+          <form id="settingsForm" class="space-y-4 max-w-md mx-auto text-left">
+            <div>
+              <label for="notifications" class="block mb-1 text-gray-800 font-medium">
+                Email Notifications
+              </label>
+              <select id="notifications" class="select select-bordered w-full bg-gray-50 text-gray-800">
+                <option value="enabled">Enabled</option>
+                <option value="disabled">Disabled</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="themeSelect" class="block mb-1 text-gray-800 font-medium">
+                Theme
+              </label>
+              <select id="themeSelect" class="select select-bordered w-full bg-gray-50 text-gray-800">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button id="saveSettingsBtn" type="button"
+                class="btn bg-indigo-600 text-white hover:bg-indigo-700 border-none transition-all hover:-translate-y-0.5 hover:shadow-lg">
+                Save Settings
+              </button>
+              <span id="settingsMsg" class="text-sm text-green-600 hidden">
+                Settings saved ✔
+              </span>
+            </div>
+          </form>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- ===== Login Modal ===== -->
+    <dialog id="loginModal" class="modal">
+      <form id="loginForm" method="dialog"
+        class="modal-box bg-white rounded-2xl max-w-sm mx-auto shadow-modal border border-gray-200">
+        <h3 class="font-bold text-xl text-indigo-600 mb-4 text-center">
+          Login
+        </h3>
+
+        <div class="space-y-3">
+          <input id="loginUsername" type="text" placeholder="Username" class="input input-bordered w-full" required />
+          <input id="loginPassword" type="password" placeholder="Password" class="input input-bordered w-full"
+            required />
+          <p id="loginError" class="text-sm text-red-600 hidden"></p>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" id="loginCancel" class="btn">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary bg-indigo-600 border-none hover:bg-indigo-700">
+            Login
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- ===== Sign Up Modal ===== -->
+    <dialog id="signupModal" class="modal">
+      <form id="signupForm" method="dialog"
+        class="modal-box bg-white rounded-2xl max-w-sm mx-auto shadow-modal border border-gray-200">
+        <h3 class="font-bold text-xl text-indigo-600 mb-4 text-center">
+          Sign Up
+        </h3>
+
+        <div class="space-y-3">
+          <input id="signupName" type="text" placeholder="Full Name" class="input input-bordered w-full" required />
+          <input id="signupEmail" type="email" placeholder="Email" class="input input-bordered w-full" required />
+          <input id="signupPassword" type="password" placeholder="Password" class="input input-bordered w-full"
+            required />
+          <p id="signupError" class="text-sm text-red-600 hidden"></p>
+        </div>
+
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" id="signupCancel" class="btn">
+            Cancel
+          </button>
+          <button type="submit"
+            class="btn btn-primary bg-indigo-600 border-none hover:bg-indigo-700">
+            Register
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </div>
+
+  
+  <script src="script.js" ></script>
+
+</body>
+
+</html>
